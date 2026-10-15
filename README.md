@@ -5,6 +5,7 @@ THIS IS NOT COMPLETE AND NEEDS support!!! Any help is appreciated in getting thi
 So far this can get to main execution and currently I just need some help taking this further and getting free of 
 the start up crash loop this project been in its the furthest its been yet. I provided my halo.log generated before the crash in case it helps debug but I am sure more is needed then that log.
 
+"EXTRA notes!!! I ran most of my devkitpro work inside a podman isolated instance so the files were kinda a mess lots of workarounds to do what I needed in a docker like setup. I progressed from simple green screen graphic's to getting the main elf execution to occur. Then as time went on I let gemini llm take over the podman instance" 
 
 The build successfully passed segment loading, resolved all 192 imports, and transitioned the code memory to RX before a black screen and software closed cause of a error prompt.
 
