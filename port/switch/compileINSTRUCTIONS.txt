@@ -1,0 +1,185 @@
+This might be old info so ignore this for for now
+
+================================================================================
+ HALO: COMBAT EVOLVED - NINTENDO SWITCH PORT
+ COMPILATION & SETUP INSTRUCTIONS
+================================================================================
+
+TABLE OF CONTENTS
+1. Overview & Architecture
+2. Compilation Tools & Requirements
+3. Compilation Steps (Using Docker & devkitPro)
+4. Summary of Code Fixes Applied
+5. Nintendo Switch SD Card Setup
+6. Game Files & Map Placement
+7. Launching on Nintendo Switch (IMPORTANT: Full RAM Access)
+8. Troubleshooting & Logs
+
+================================================================================
+1. OVERVIEW & ARCHITECTURE
+================================================================================
+This Nintendo Switch port is based on halo-ce-universal, using an ARM64 native 
+host wrapper (`halo.nro`) combined with an ARM64 guest ELF (`halo_guest.elf`) 
+packaged in RomFS.
+
+The host program manages:
+- 2 GB memory space mapping and Xbox contiguous memory windows.
+- Dynamic system call emulation (musl libc -> Horizon/libnx).
+- Graphics conversion via EGL / OpenGL ES 3.2 (Mesa / deko3d/libdrm_nouveau).
+- Audio and Controller inputs via SDL2.
+- POSIX file system and socket networking layer.
+
+================================================================================
+2. COMPILATION TOOLS & REQUIREMENTS
+================================================================================
+To build the Switch port, you need:
+- Docker installed on your host system (Linux, macOS, or Windows with WSL2).
+- The official devkitPro devkitA64 Docker image:
+    `devkitpro/devkita64:latest`
+  This image includes:
+    - aarch64-none-elf-gcc / binutils
+    - libnx (Nintendo Switch OS library)
+    - switch-tools (elf2nro, nacptool)
+    - switch-sdl2
+    - switch-mesa (EGL, GLESv2, glapi)
+    - switch-libdrm_nouveau
+
+No manual installation of toolchains is required if Docker is available.
+
+================================================================================
+3. COMPILATION STEPS (USING DOCKER & DEVKITPRO)
+================================================================================
+From a terminal on your host system:
+
+1. Navigate to the project directory:
+   cd /path/to/halo-ce-universal/port/switch
+
+2. Run the Docker compilation command:
+   docker run --rm -u $(id -u):$(id -g) \
+     -v "$(pwd)":/work \
+     -w /work \
+     devkitpro/devkita64 make
+
+3. To do a clean rebuild:
+   docker run --rm -u $(id -u):$(id -g) \
+     -v "$(pwd)":/work \
+     -w /work \
+     devkitpro/devkita64 make clean all
+
+Resulting binaries generated in `port/switch/`:
+- `halo.nro`: The Nintendo Switch executable (includes RomFS).
+- `halo.elf`: Intermediate AArch64 ELF executable.
+- `halo.nacp`: Nintendo Switch application control property file.
+
+================================================================================
+4. SUMMARY OF CODE FIXES APPLIED
+================================================================================
+1. Self-contained POSIX Header:
+   - Problem: `host_imports.c` and `switch_posix.c` previously referenced 
+     `../../linux/src/posix.h`, which fails when only `port/switch` is mounted into 
+     Docker as `/work`.
+   - Fix: Copied `posix.h` to `port/switch/include/posix.h` and modified the includes 
+     to use local `"posix.h"` first.
+
+2. Removed `<sys/mman.h>`:
+   - Problem: devkitPro newlib does not provide `<sys/mman.h>`.
+   - Fix: Replaced `<sys/mman.h>` in `host_memory.c` with direct `MAP_FIXED` (0x10) 
+     definition.
+
+3. Resolved Linker Error (`_getentropy_r`):
+   - Problem: newlib's `arc4random_buf` triggered an undefined reference to 
+     `_getentropy_r` during link time.
+   - Fix: Switched `posix_random_bytes` and `SYS_getrandom` to use libnx's hardware 
+     PRNG `randomGet()`, and provided `_getentropy_r` / `getentropy` implementations.
+
+================================================================================
+5. NINTENDO SWITCH SD CARD SETUP
+================================================================================
+Insert your Switch MicroSD card into your computer, or connect via FTP/MTP (DBI/NX-Shell).
+
+Create the following directory layout on your SD card root (`sdmc:/`):
+
+sdmc:/
+└── switch/
+    └── halo/
+        ├── halo.nro          <-- Place the compiled halo.nro here
+        ├── halo.log          <-- Generated automatically on boot
+        ├── save/             <-- Generated automatically for player profiles and saves
+        └── maps/             <-- Place your Halo game map files here!
+            ├── ui.map
+            ├── bitmaps.map
+            ├── sounds.map
+            ├── a10.map
+            ├── a30.map
+            ├── a50.map
+            ├── b30.map
+            ├── b40.map
+            ├── c10.map
+            ├── c20.map
+            ├── c40.map
+            ├── d20.map
+            ├── d40.map
+            └── [multiplayer maps: bloodgulch.map, hangemhigh.map, etc.]
+
+Note: Alternatively, `halo.nro` can also be placed directly at `sdmc:/switch/halo.nro`.
+
+================================================================================
+6. GAME FILES & MAP PLACEMENT
+================================================================================
+The Switch port requires assets from a legal copy of Halo: Combat Evolved for PC 
+or Halo Custom Edition.
+
+1. Locate the `MAPS` folder from your PC installation:
+   Default PC path:
+   `C:\Program Files (x86)\Microsoft Games\Halo\MAPS\`
+
+2. Copy all `.map` files into:
+   `sdmc:/switch/halo/maps/`
+
+CRITICAL FILES:
+- `ui.map` (Required to start the game and display menus; the port will refuse 
+  to start without this file)
+- `bitmaps.map` (Contains UI and environment textures)
+- `sounds.map` (Contains all sound effects and voices)
+- Campaign levels (`a10.map` through `d40.map`)
+- Multiplayer levels (`bloodgulch.map`, `deathisland.map`, `sidewinder.map`, etc.)
+
+Optional:
+If you need to test updated versions of `halo_guest.elf` without recompiling 
+the entire `.nro`, you can drop `halo_guest.elf` directly into:
+`sdmc:/switch/halo/halo_guest.elf`
+The host wrapper checks the SD card first before falling back to the RomFS copy.
+
+================================================================================
+7. LAUNCHING ON NINTENDO SWITCH (IMPORTANT: FULL RAM ACCESS)
+================================================================================
+Halo: Combat Evolved reserves ~2 GB of virtual address space on the Switch.
+
+DO NOT RUN IN APPLET MODE!
+If you open Album to enter the Homebrew Menu, the application runs in "Applet Mode" 
+which restricts memory access to ~450 MB. The game will crash with out-of-memory errors.
+
+HOW TO LAUNCH WITH FULL RAM (TITLE REDIRECTION):
+1. In the Horizon home menu, hold down the [R] button on your Joy-Con/Pro Controller.
+2. While holding [R], select and launch ANY installed commercial game (or demo).
+3. Keep holding [R] until the Homebrew Menu appears.
+4. Locate and launch "Halo: Combat Evolved".
+5. The game now has access to the full 4 GB / 36-bit RAM space.
+
+================================================================================
+8. TROUBLESHOOTING & LOGS
+================================================================================
+- If the game crashes on startup:
+  Check the log file at:
+  `sdmc:/switch/halo/halo.log`
+  This will detail memory allocation steps, guest ELF loading, and exact error 
+  messages (e.g., missing map files).
+
+- "Halo game maps not found!":
+  Verify that `sdmc:/switch/halo/maps/ui.map` exists and that filenames are 
+  lowercase or match standard Halo PC naming conventions.
+
+- Controller / Gamepad:
+  Nintendo Switch Joy-Cons and Pro Controllers are automatically recognized via 
+  libnx and SDL2 game controller mappings.
+================================================================================

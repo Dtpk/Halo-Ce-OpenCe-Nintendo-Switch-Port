@@ -1,0 +1,42 @@
+# Nintendo Switch build artifacts
+build/
+*.elf
+*.nro
+*.nacp
+*.map
+*.o
+
+# Preserve precompiled guest ELF in romfs
+!romfs/
+!romfs/halo_guest.elf
+!port/switch/romfs/
+!port/switch/romfs/halo_guest.elf
+
+# Ninja & build files
+.ninja_*
+build.ninja
+compile_commands.json
+dist/
+
+# Caches & IDE folders
+__pycache__/
+.mypy_cache/
+.cache/
+.idea/
+.vs/
+
+# Logs and runtime dumps
+*.log
+halo.log
+crash_dump.log
+safe_crash.log
+save/
+
+# Editor and temporary files
+*~
+*.swp
+*.swo
+*.orig
+*.rej
+.DS_Store
+Thumbs.db
