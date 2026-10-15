@@ -1,0 +1,24 @@
+[HALO] initializing guest memory with 64KB alignment (window: 0x8000000, code: 0x710000, data: 0xaf0000, dyn: 0x10000000)...
+[HALO] mapping xbox window (RW): handle=0x2e81e2, dst=0x80000000, size=0x8000000
+[HALO] Xbox contiguous memory window zeroed at 0x80000000
+[HALO] mapping code (RW): handle=0x2f01e1, dst=0x88000000, size=0x710000
+[HALO] mapping data (RW): handle=0x2f81e0, dst=0x88710000, size=0xaf0000
+[HALO] mapping dynamic pool (RW): handle=0x3001dd, dst=0x89400000, size=0x10000000
+[HALO] dynamic pool mapped at 0x89400000
+[HALO] guest segments successfully reserved and allocated.
+[HALO] Halo CE starting on Nintendo Switch
+[HALO] host_load_image: headers validated
+[HALO] host_load_image: initializing memory at 0x88000000..0x891bc000
+[HALO] memory already preinitialized, skipping re-mapping
+[HALO] host_load_image: copying 5 segments...
+[HALO]   Segment 0 loaded (0x88000000, size 0x2c)
+[HALO]   Segment 1 loaded (0x88000030, size 0x2bfb74)
+[HALO]   Segment 2 loaded (0x882bfbb0, size 0x44ca0a)
+[HALO]   Segment 3 loaded (0x88710000, size 0xaab778)
+[HALO] resolving 192 guest imports...
+[HALO] stubbed out Bink cinematic player
+[HALO] transitioning code memory to executable...
+[HALO] transitioning code memory at 0x88000000 (size 0x710000) to executable...
+[HALO] svcControlCodeMemory(UnmapOwner) -> 0x0
+[HALO] svcControlCodeMemory(MapSlave, RX) -> 0x0
+[HALO] code at 0x88000000 successfully transitioned to RX via CodeMemory
