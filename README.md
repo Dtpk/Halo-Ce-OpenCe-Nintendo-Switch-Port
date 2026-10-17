@@ -2,6 +2,8 @@
 
 THIS IS NOT COMPLETE AND NEEDS support!!! Any help is appreciated in getting this running!!!
 
+"I may abandon this or work on it as a personal project someone beat me too this by a few days and their port is much further but if you still wish to help with this i'm here for it so reach out"
+
 So far this can get to main execution and currently I just need some help taking this further and getting free of 
 the start up crash loop this project been in its the furthest its been yet. I provided my halo.log generated before the crash in case it helps debug but I am sure more is needed then that log.
 
